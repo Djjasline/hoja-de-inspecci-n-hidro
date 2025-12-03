@@ -732,3 +732,208 @@ export default function HojaInspeccionHidro() {
 
       {/* DESCRIPCIÓN DEL EQUIPO */}
       <section className="border rounded-xl p-4 space-y-3">
+        <h2 className="font-semibold text-xs md:text-sm">
+          Descripción del equipo
+        </h2>
+        <div className="grid md:grid-cols-4 gap-3">
+          <label className="flex flex-col gap-1">
+            <span>Marca</span>
+            <input
+              name="marca"
+              value={formData.marca}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>Modelo</span>
+            <input
+              name="modelo"
+              value={formData.modelo}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>N° serie</span>
+            <input
+              name="numeroSerie"
+              value={formData.numeroSerie}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>Placa N°</span>
+            <input
+              name="placa"
+              value={formData.placa}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span>Horas trabajo módulo</span>
+            <input
+              name="horasModulo"
+              value={formData.horasModulo}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>Horas trabajo chasis</span>
+            <input
+              name="horasChasis"
+              value={formData.horasChasis}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>Año modelo</span>
+            <input
+              name="anioModelo"
+              value={formData.anioModelo}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>VIN chasis</span>
+            <input
+              name="vinChasis"
+              value={formData.vinChasis}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span>Kilometraje</span>
+            <input
+              name="kilometraje"
+              value={formData.kilometraje}
+              onChange={handleHeaderChange}
+              className="border rounded px-2 py-1"
+            />
+          </label>
+        </div>
+      </section>
+
+      {/* FIRMAS / RESPONSABLES */}
+      <section className="border rounded-xl p-4 space-y-3">
+        <h2 className="font-semibold text-xs md:text-sm">
+          Firmas y responsables
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <p className="font-semibold text-xs">
+              Elaborado por: ASTAP Cía. Ltda.
+            </p>
+            <label className="flex flex-col gap-1">
+              <span>Nombre</span>
+              <input
+                name="elaboradoNombre"
+                value={formData.elaboradoNombre}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Cargo</span>
+              <input
+                name="elaboradoCargo"
+                value={formData.elaboradoCargo}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Teléfono</span>
+              <input
+                name="elaboradoTelefono"
+                value={formData.elaboradoTelefono}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Correo</span>
+              <input
+                name="elaboradoCorreo"
+                value={formData.elaboradoCorreo}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-semibold text-xs">Autorizado por: CLIENTE</p>
+            <label className="flex flex-col gap-1">
+              <span>Nombre</span>
+              <input
+                name="autorizadoNombre"
+                value={formData.autorizadoNombre}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Cargo</span>
+              <input
+                name="autorizadoCargo"
+                value={formData.autorizadoCargo}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Teléfono</span>
+              <input
+                name="autorizadoTelefono"
+                value={formData.autorizadoTelefono}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span>Correo</span>
+              <input
+                name="autorizadoCorreo"
+                value={formData.autorizadoCorreo}
+                onChange={handleHeaderChange}
+                className="border rounded px-2 py-1"
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* BOTONES */}
+      <div className="flex flex-wrap justify-end gap-3 pt-2">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="px-4 py-2 rounded-lg border text-xs md:text-sm"
+        >
+          Limpiar ítems
+        </button>
+        <button
+          type="button"
+          onClick={handleGeneratePDF}
+          className="px-4 py-2 rounded-lg bg-green-600 text-white text-xs md:text-sm"
+        >
+          Generar PDF
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-xs md:text-sm"
+        >
+          Guardar / continuar
+        </button>
+      </div>
+    </form>
+  );
+}
