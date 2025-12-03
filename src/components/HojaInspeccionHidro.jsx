@@ -1,7 +1,9 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import astapLogo from "../../fuente/logotipo de astap.jpg";
+
+// Ruta del logo servido desde /public
+const LOGO_PATH = "/astap-logo.jpg";
 
 // IMPORTANTE: package.json debe tener:
 // "jspdf": "^2.5.1",
@@ -323,10 +325,10 @@ export default function HojaInspeccionHidro() {
     }));
   };
 
-  // Carga el logo (importado) como dataURL para jsPDF
+  // Carga el logo desde /public como dataURL para jsPDF
   const loadLogoDataUrl = async () => {
     try {
-      const res = await fetch(astapLogo);
+      const res = await fetch(LOGO_PATH);
       const blob = await res.blob();
       return await new Promise((resolve) => {
         const reader = new FileReader();
@@ -531,11 +533,7 @@ export default function HojaInspeccionHidro() {
       <section className="border rounded-xl p-4 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <img
-              src={astapLogo}
-              alt="ASTAP"
-              className="h-10 w-auto"
-            />
+            <img src={LOGO_PATH} alt="ASTAP" className="h-10 w-auto" />
             <h1 className="font-bold text-base md:text-lg text-center md:text-left">
               HOJA DE INSPECCIÓN HIDROSUCCIONADOR
             </h1>
