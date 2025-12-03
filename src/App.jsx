@@ -1,14 +1,11 @@
-// src/App.jsx
+// index.jsx (ejemplo típico)
 import React from "react";
-import Routes from "./Routes";
-import { ReportProvider } from "./context/ReportContext";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import HojaInspeccionHidro from "./components/HojaInspeccionHidro";
 
-const App = () => {
-  return (
-    <ReportProvider>
-      <Routes />
-    </ReportProvider>
-  );
-};
-
-export default App;
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <HojaInspeccionHidro />
+  </React.StrictMode>
+);
