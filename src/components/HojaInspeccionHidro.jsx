@@ -2,7 +2,7 @@ import { useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// IMPORTANTE: tu package.json ya debe tener:
+// IMPORTANTE: package.json debe tener:
 // "jspdf": "^2.5.1",
 // "jspdf-autotable": "^3.8.4",
 
@@ -322,24 +322,48 @@ export default function HojaInspeccionHidro() {
     }));
   };
 
-  const handleGeneratePDF = () => {
-    const doc = new jsPDF("p", "mm", "a4");
+  // Función auxiliar para cargar el logo como dataURL
+  const loadLogoDataUrl = async () => {
+    try {
+      const res = await fetch("/astap-logo.png");
+      const blob = await res.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.error("No se pudo cargar el logo:", e);
+      return null;
+    }
+  };
 
+  const handleGeneratePDF = async () => {
+    const doc = new jsPDF("p", "mm", "a4");
     let y = 10;
 
-    // Título
+    // LOGO ASTAP + TÍTULO
+    const logoDataUrl = await loadLogoDataUrl();
+    if (logoDataUrl) {
+      // x, y, width, height (ajusta si quieres)
+      doc.addImage(logoDataUrl, "PNG", 10, 8, 25, 10);
+    }
+
     doc.setFontSize(12);
-    doc.text("HOJA DE INSPECCIÓN HIDROSUCCIONADOR", 105, y, {
-      align: "center",
-    });
-    y += 6;
-    doc.setFontSize(8);
-    doc.text("Fecha de versión: 25-11-2025   Versión: 01", 105, y, {
+    // Título con el texto pedido
+    doc.text("HOJA DE INSPECCIÓN HIDROSUCCIONADOR", 105, 12, {
       align: "center",
     });
 
+    doc.setFontSize(8);
+    doc.text("Fecha de versión: 25-11-2025", 200 - 10, 10, {
+      align: "right",
+    });
+    doc.text("Versión: 01", 200 - 10, 14, { align: "right" });
+
+    y = 22;
+
     // Datos principales
-    y += 10;
     doc.setFontSize(9);
     doc.text(
       `Referencia contrato: ${formData.referenciaContrato || ""}`,
@@ -394,8 +418,7 @@ export default function HojaInspeccionHidro() {
     y += obsGenerales.length * 4 + 6;
 
     // Tablas de secciones con autoTable
-    secciones.forEach((sec, index) => {
-      // Si no hay espacio, nueva página
+    secciones.forEach((sec) => {
       if (y > 220) {
         doc.addPage();
         y = 10;
@@ -431,12 +454,11 @@ export default function HojaInspeccionHidro() {
         margin: { left: 10, right: 10 },
       });
 
-      // Actualizar y en función de la última tabla
       // @ts-ignore
       y = doc.lastAutoTable.finalY + 6;
     });
 
-    // Nueva página para descripción de equipo y firmas
+    // Nueva página para descripción del equipo y firmas
     doc.addPage();
     y = 10;
 
@@ -509,9 +531,16 @@ export default function HojaInspeccionHidro() {
       {/* ENCABEZADO */}
       <section className="border rounded-xl p-4 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <h1 className="font-bold text-base md:text-lg text-center md:text-left">
-            HOJA DE INSPECCIÓN HIDROSUCCIONADOR
-          </h1>
+          <div className="flex items-center gap-3">
+            <img
+              src="/astap-logo.png"
+              alt="ASTAP"
+              className="h-10 w-auto"
+            />
+            <h1 className="font-bold text-base md:text-lg text-center md:text-left">
+              HOJA DE INSPECCIÓN HIDROSUCCIONADOR
+            </h1>
+          </div>
           <div className="text-[10px] text-right">
             <p>Fecha de versión: 25-11-2025</p>
             <p>Versión: 01</p>
