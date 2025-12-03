@@ -1,4 +1,10 @@
 import { useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+// IMPORTANTE: tu package.json ya debe tener:
+// "jspdf": "^2.5.1",
+// "jspdf-autotable": "^3.8.4",
 
 const secciones = [
   {
@@ -12,8 +18,7 @@ const secciones = [
       },
       {
         codigo: "1.2",
-        texto:
-          "Verificación de funcionamiento de controles principales",
+        texto: "Verificación de funcionamiento de controles principales",
       },
       {
         codigo: "1.3",
@@ -307,7 +312,6 @@ export default function HojaInspeccionHidro() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aquí luego conectamos con generación de PDF o envío a backend
     console.log("Datos de inspección:", formData);
   };
 
@@ -316,6 +320,185 @@ export default function HojaInspeccionHidro() {
       ...prev,
       items: {},
     }));
+  };
+
+  const handleGeneratePDF = () => {
+    const doc = new jsPDF("p", "mm", "a4");
+
+    let y = 10;
+
+    // Título
+    doc.setFontSize(12);
+    doc.text("HOJA DE INSPECCIÓN HIDROSUCCIONADOR", 105, y, {
+      align: "center",
+    });
+    y += 6;
+    doc.setFontSize(8);
+    doc.text("Fecha de versión: 25-11-2025   Versión: 01", 105, y, {
+      align: "center",
+    });
+
+    // Datos principales
+    y += 10;
+    doc.setFontSize(9);
+    doc.text(
+      `Referencia contrato: ${formData.referenciaContrato || ""}`,
+      10,
+      y
+    );
+    y += 5;
+    doc.text(`Descripción: ${formData.descripcion || ""}`, 10, y);
+    y += 5;
+    doc.text(`Cod. INF: ${formData.codInf || ""}`, 10, y);
+    y += 5;
+    doc.text(
+      `Fecha inspección: ${formData.fechaInspeccion || ""}`,
+      10,
+      y
+    );
+    y += 5;
+    doc.text(`Ubicación: ${formData.ubicacion || ""}`, 10, y);
+    y += 5;
+    doc.text(`Cliente: ${formData.cliente || ""}`, 10, y);
+    y += 5;
+    doc.text(`Técnico ASTAP: ${formData.tecnicoAstap || ""}`, 10, y);
+    y += 5;
+    doc.text(
+      `Responsable cliente: ${formData.responsableCliente || ""}`,
+      10,
+      y
+    );
+
+    // Estado del equipo y observaciones
+    y += 8;
+    doc.setFontSize(9);
+    doc.text("Estado del equipo:", 10, y);
+    y += 4;
+    doc.setFontSize(8);
+    const estadoEquipo = doc.splitTextToSize(
+      formData.estadoEquipo || "",
+      190
+    );
+    doc.text(estadoEquipo, 10, y);
+    y += estadoEquipo.length * 4 + 4;
+
+    doc.setFontSize(9);
+    doc.text("Observaciones generales:", 10, y);
+    y += 4;
+    doc.setFontSize(8);
+    const obsGenerales = doc.splitTextToSize(
+      formData.observacionesGenerales || "",
+      190
+    );
+    doc.text(obsGenerales, 10, y);
+    y += obsGenerales.length * 4 + 6;
+
+    // Tablas de secciones con autoTable
+    secciones.forEach((sec, index) => {
+      // Si no hay espacio, nueva página
+      if (y > 220) {
+        doc.addPage();
+        y = 10;
+      }
+
+      doc.setFontSize(9);
+      doc.text(sec.titulo, 10, y);
+      y += 4;
+
+      const head = [
+        ["Ítem", "Detalle", "Sí", "No", "Observación / Novedad"],
+      ];
+
+      const body = sec.items.map((item) => {
+        const data = formData.items[item.codigo] || {};
+        const estado = data.estado || "";
+        const obs = data.observacion || "";
+        return [
+          item.codigo,
+          item.texto,
+          estado === "SI" ? "X" : "",
+          estado === "NO" ? "X" : "",
+          obs,
+        ];
+      });
+
+      autoTable(doc, {
+        startY: y,
+        head,
+        body,
+        styles: { fontSize: 7, cellPadding: 1 },
+        headStyles: { fillColor: [230, 230, 230] },
+        margin: { left: 10, right: 10 },
+      });
+
+      // Actualizar y en función de la última tabla
+      // @ts-ignore
+      y = doc.lastAutoTable.finalY + 6;
+    });
+
+    // Nueva página para descripción de equipo y firmas
+    doc.addPage();
+    y = 10;
+
+    doc.setFontSize(10);
+    doc.text("Descripción del equipo", 10, y);
+    y += 6;
+    doc.setFontSize(9);
+    doc.text(`Marca: ${formData.marca || ""}`, 10, y);
+    y += 5;
+    doc.text(`Modelo: ${formData.modelo || ""}`, 10, y);
+    y += 5;
+    doc.text(`N° serie: ${formData.numeroSerie || ""}`, 10, y);
+    y += 5;
+    doc.text(`Placa: ${formData.placa || ""}`, 10, y);
+    y += 5;
+    doc.text(
+      `Horas módulo: ${formData.horasModulo || ""}   Horas chasis: ${
+        formData.horasChasis || ""
+      }`,
+      10,
+      y
+    );
+    y += 5;
+    doc.text(
+      `Año modelo: ${formData.anioModelo || ""}   VIN chasis: ${
+        formData.vinChasis || ""
+      }`,
+      10,
+      y
+    );
+    y += 5;
+    doc.text(`Kilometraje: ${formData.kilometraje || ""}`, 10, y);
+
+    // Firmas
+    y += 10;
+    doc.setFontSize(10);
+    doc.text("Firmas y responsables", 10, y);
+    y += 6;
+    doc.setFontSize(9);
+
+    doc.text("Elaborado por: ASTAP Cía. Ltda.", 10, y);
+    y += 5;
+    doc.text(`Nombre: ${formData.elaboradoNombre || ""}`, 10, y);
+    y += 5;
+    doc.text(`Cargo: ${formData.elaboradoCargo || ""}`, 10, y);
+    y += 5;
+    doc.text(`Teléfono: ${formData.elaboradoTelefono || ""}`, 10, y);
+    y += 5;
+    doc.text(`Correo: ${formData.elaboradoCorreo || ""}`, 10, y);
+
+    y += 10;
+    doc.text("Autorizado por: CLIENTE", 10, y);
+    y += 5;
+    doc.text(`Nombre: ${formData.autorizadoNombre || ""}`, 10, y);
+    y += 5;
+    doc.text(`Cargo: ${formData.autorizadoCargo || ""}`, 10, y);
+    y += 5;
+    doc.text(`Teléfono: ${formData.autorizadoTelefono || ""}`, 10, y);
+    y += 5;
+    doc.text(`Correo: ${formData.autorizadoCorreo || ""}`, 10, y);
+
+    doc.save("hoja_inspeccion_hidrosuccionador.pdf");
   };
 
   return (
@@ -701,13 +884,20 @@ export default function HojaInspeccionHidro() {
       </section>
 
       {/* BOTONES */}
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex flex-wrap justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={handleReset}
           className="px-4 py-2 rounded-lg border text-xs md:text-sm"
         >
           Limpiar ítems
+        </button>
+        <button
+          type="button"
+          onClick={handleGeneratePDF}
+          className="px-4 py-2 rounded-lg bg-green-600 text-white text-xs md:text-sm"
+        >
+          Generar PDF
         </button>
         <button
           type="submit"
