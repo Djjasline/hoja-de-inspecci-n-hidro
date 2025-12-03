@@ -7,8 +7,15 @@ const secciones = [
       "1. PRUEBAS DE ENCENDIDO DEL EQUIPO Y FUNCIONAMIENTO DE SUS SISTEMAS, PREVIOS AL SERVICIO",
     items: [
       { codigo: "1.1", texto: "Prueba de encendido general del equipo" },
-      { codigo: "1.2", texto: "Verificación de funcionamiento de controles principales" },
-      { codigo: "1.3", texto: "Revisión de alarmas o mensajes de fallo" },
+      {
+        codigo: "1.2",
+        texto:
+          "Verificación de funcionamiento de controles principales",
+      },
+      {
+        codigo: "1.3",
+        texto: "Revisión de alarmas o mensajes de fallo",
+      },
     ],
   },
   {
@@ -18,7 +25,8 @@ const secciones = [
     items: [
       {
         codigo: "A.1",
-        texto: "Fugas de aceite hidráulico (mangueras - acoples - bancos)",
+        texto:
+          "Fugas de aceite hidráulico (mangueras - acoples - bancos)",
       },
       { codigo: "A.2", texto: "Nivel de aceite del soplador" },
       { codigo: "A.3", texto: "Nivel de aceite hidráulico" },
@@ -55,7 +63,44 @@ const secciones = [
       },
     ],
   },
-  // Más adelante añadiremos aquí B) SISTEMA HIDRÁULICO (AGUA), C) y D)
+  {
+    id: "secB",
+    titulo:
+      "2. EVALUACIÓN DEL ESTADO DE LOS COMPONENTES O ESTADO DE LOS SISTEMAS DEL MÓDULO VACTOR – B) SISTEMA HIDRÁULICO (AGUA)",
+    items: [
+      {
+        codigo: "B.1",
+        texto:
+          "Estado de los empaques de la tapa de los filtros de agua",
+      },
+      {
+        codigo: "B.2",
+        texto:
+          "Inspección del sistema de tapón de expansión de 2\" de tanques de agua",
+      },
+      {
+        codigo: "B.3",
+        texto:
+          "Inspección de golpes y fugas de agua en el tanque de aluminio",
+      },
+      {
+        codigo: "B.4",
+        texto:
+          "Inspección de sistema de trinquete, seguros y cilindros neumáticos, se activan",
+      },
+      {
+        codigo: "B.5",
+        texto:
+          "Inspección de los sellos en el tanque de desperdicios (frontal y posterior), presencia de humedad en sus componentes",
+      },
+      {
+        codigo: "B.6",
+        texto:
+          "Inspección del estado de los filtros malla para agua de 2\" y 3\"",
+      },
+    ],
+  },
+  // Más adelante agregaremos aquí secC y secD
 ];
 
 export default function HojaInspeccionHidro() {
@@ -244,7 +289,7 @@ export default function HojaInspeccionHidro() {
         </label>
       </section>
 
-      {/* TABLAS DE ÍTEMS */}
+      {/* TABLAS DE ÍTEMS (1, A, B, etc.) */}
       {secciones.map((sec) => (
         <section key={sec.id} className="border rounded-xl p-4 space-y-3">
           <h2 className="font-semibold text-xs md:text-sm">{sec.titulo}</h2>
@@ -266,7 +311,8 @@ export default function HojaInspeccionHidro() {
               <tbody>
                 {sec.items.map((item) => {
                   const estado = formData.items[item.codigo]?.estado || "";
-                  const obs = formData.items[item.codigo]?.observacion || "";
+                  const obs =
+                    formData.items[item.codigo]?.observacion || "";
                   return (
                     <tr key={item.codigo}>
                       <td className="border px-2 py-1 text-center">
@@ -423,7 +469,9 @@ export default function HojaInspeccionHidro() {
         </h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <p className="font-semibold text-xs">Elaborado por: ASTAP Cía. Ltda.</p>
+            <p className="font-semibold text-xs">
+              Elaborado por: ASTAP Cía. Ltda.
+            </p>
             <label className="flex flex-col gap-1">
               <span>Nombre</span>
               <input
