@@ -1,10 +1,11 @@
+// index.jsx (ejemplo típico)
 import React from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./styles/tailwind.css";
-import "./styles/index.css";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import HojaInspeccionHidro from "./components/HojaInspeccionHidro";
 
-const container = document.getElementById("root");
-const root = createRoot(container);
-
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <HojaInspeccionHidro />
+  </React.StrictMode>
+);
