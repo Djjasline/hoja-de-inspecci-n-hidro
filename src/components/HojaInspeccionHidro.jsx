@@ -2,8 +2,8 @@ import { useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Ruta del logo servido desde /public
-const LOGO_PATH = "/logotipo de astap.jpg";
+// El logo ahora está en public/astap-logo.jpg
+const LOGO_PATH = "/astap-logo.jpg";
 
 // IMPORTANTE: package.json debe tener:
 // "jspdf": "^2.5.1",
@@ -15,18 +15,12 @@ const secciones = [
     titulo:
       "1. PRUEBAS DE ENCENDIDO DEL EQUIPO Y FUNCIONAMIENTO DE SUS SISTEMAS, PREVIOS AL SERVICIO",
     items: [
-      {
-        codigo: "1.1",
-        texto: "Prueba de encendido general del equipo",
-      },
+      { codigo: "1.1", texto: "Prueba de encendido general del equipo" },
       {
         codigo: "1.2",
         texto: "Verificación de funcionamiento de controles principales",
       },
-      {
-        codigo: "1.3",
-        texto: "Revisión de alarmas o mensajes de fallo",
-      },
+      { codigo: "1.3", texto: "Revisión de alarmas o mensajes de fallo" },
     ],
   },
   {
@@ -137,10 +131,7 @@ const secciones = [
         texto:
           "Inspección del estado del carrete de manguera y manguera guía",
       },
-      {
-        codigo: "B.12",
-        texto: "Soporte del carrete, ¿está flojo?",
-      },
+      { codigo: "B.12", texto: "Soporte del carrete, ¿está flojo?" },
       {
         codigo: "B.13",
         texto:
@@ -156,18 +147,9 @@ const secciones = [
         texto:
           "Inspección de la válvula de alivio de bomba de agua (opcional)",
       },
-      {
-        codigo: "B.16",
-        texto: "Inspección de válvulas de 1\"",
-      },
-      {
-        codigo: "B.17",
-        texto: "Inspección de válvulas de 3/4\"",
-      },
-      {
-        codigo: "B.18",
-        texto: "Inspección de válvulas de 1/2\"",
-      },
+      { codigo: "B.16", texto: "Inspección de válvulas de 1\"" },
+      { codigo: "B.17", texto: "Inspección de válvulas de 3/4\"" },
+      { codigo: "B.18", texto: "Inspección de válvulas de 1/2\"" },
       {
         codigo: "B.19",
         texto:
@@ -199,11 +181,7 @@ const secciones = [
         texto:
           "Inspección del estado de las electroválvulas de los bancos de control",
       },
-      {
-        codigo: "C.5",
-        texto:
-          "Presencia de humedad en sus componentes",
-      },
+      { codigo: "C.5", texto: "Presencia de humedad en sus componentes" },
       {
         codigo: "C.6",
         texto:
@@ -321,7 +299,6 @@ export default function HojaInspeccionHidro() {
     }));
   };
 
-  // Carga el logo desde /public como dataURL para jsPDF
   const loadLogoDataUrl = async () => {
     try {
       const res = await fetch(LOGO_PATH);
@@ -341,7 +318,6 @@ export default function HojaInspeccionHidro() {
     const doc = new jsPDF("p", "mm", "a4");
     let y = 10;
 
-    // LOGO ASTAP + TÍTULO
     const logoDataUrl = await loadLogoDataUrl();
     if (logoDataUrl) {
       doc.addImage(logoDataUrl, "JPEG", 10, 8, 25, 10);
@@ -353,14 +329,11 @@ export default function HojaInspeccionHidro() {
     });
 
     doc.setFontSize(8);
-    doc.text("Fecha de versión: 25-11-2025", 200 - 10, 10, {
-      align: "right",
-    });
+    doc.text("Fecha de versión: 25-11-2025", 200 - 10, 10, { align: "right" });
     doc.text("Versión: 01", 200 - 10, 14, { align: "right" });
 
     y = 22;
 
-    // Datos principales
     doc.setFontSize(9);
     doc.text(
       `Referencia contrato: ${formData.referenciaContrato || ""}`,
@@ -390,7 +363,6 @@ export default function HojaInspeccionHidro() {
       y
     );
 
-    // Estado del equipo y observaciones
     y += 8;
     doc.setFontSize(9);
     doc.text("Estado del equipo:", 10, y);
@@ -414,7 +386,6 @@ export default function HojaInspeccionHidro() {
     doc.text(obsGenerales, 10, y);
     y += obsGenerales.length * 4 + 6;
 
-    // Tablas de secciones
     secciones.forEach((sec) => {
       if (y > 220) {
         doc.addPage();
@@ -455,7 +426,6 @@ export default function HojaInspeccionHidro() {
       y = doc.lastAutoTable.finalY + 6;
     });
 
-    // Nueva página: descripción del equipo y firmas
     doc.addPage();
     y = 10;
 
@@ -489,7 +459,6 @@ export default function HojaInspeccionHidro() {
     y += 5;
     doc.text(`Kilometraje: ${formData.kilometraje || ""}`, 10, y);
 
-    // Firmas
     y += 10;
     doc.setFontSize(10);
     doc.text("Firmas y responsables", 10, y);
