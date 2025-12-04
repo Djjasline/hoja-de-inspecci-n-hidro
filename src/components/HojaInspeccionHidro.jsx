@@ -2,10 +2,11 @@ import { useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// El logo ahora está en public/astap-logo.jpg
+// Rutas de imágenes en /public
 const LOGO_PATH = "/astap-logo.jpg";
+const EQUIPO_IMG_PATH = "/estado-equipo.png";
 
-// IMPORTANTE: package.json debe tener:
+// IMPORTANTE en package.json:
 // "jspdf": "^2.5.1",
 // "jspdf-autotable": "^3.8.4",
 
@@ -269,6 +270,9 @@ export default function HojaInspeccionHidro() {
     items: {},
   });
 
+  // Marcadores sobre la vista del equipo (para daños / defectos)
+  const [estadoEquipoMarks, setEstadoEquipoMarks] = useState([]);
+
   const handleHeaderChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -289,7 +293,7 @@ export default function HojaInspeccionHidro() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Datos de inspección:", formData);
+    console.log("Datos de inspección:", { ...formData, estadoEquipoMarks });
   };
 
   const handleReset = () => {
@@ -297,11 +301,30 @@ export default function HojaInspeccionHidro() {
       ...prev,
       items: {},
     }));
+    setEstadoEquipoMarks([]);
   };
 
-  const loadLogoDataUrl = async () => {
+  // Click sobre la imagen del equipo: agrega un marcador numerado
+  const handleEstadoEquipoClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setEstadoEquipoMarks((prev) => [
+      ...prev,
+      { id: Date.now() + Math.random(), x, y },
+    ]);
+  };
+
+  // Doble click en un marcador: lo elimina
+  const handleMarkerDoubleClick = (id) => {
+    setEstadoEquipoMarks((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  // Utilidad para cargar imágenes como dataURL para jsPDF
+  const loadImageAsDataUrl = async (path) => {
     try {
-      const res = await fetch(LOGO_PATH);
+      const res = await fetch(path);
       const blob = await res.blob();
       return await new Promise((resolve) => {
         const reader = new FileReader();
@@ -309,7 +332,7 @@ export default function HojaInspeccionHidro() {
         reader.readAsDataURL(blob);
       });
     } catch (e) {
-      console.error("No se pudo cargar el logo:", e);
+      console.error("No se pudo cargar la imagen:", path, e);
       return null;
     }
   };
@@ -318,22 +341,27 @@ export default function HojaInspeccionHidro() {
     const doc = new jsPDF("p", "mm", "a4");
     let y = 10;
 
-    const logoDataUrl = await loadLogoDataUrl();
+    // LOGO
+    const logoDataUrl = await loadImageAsDataUrl(LOGO_PATH);
     if (logoDataUrl) {
       doc.addImage(logoDataUrl, "JPEG", 10, 8, 25, 10);
     }
 
+    // TÍTULO
     doc.setFontSize(12);
     doc.text("HOJA DE INSPECCIÓN HIDROSUCCIONADOR", 105, 12, {
       align: "center",
     });
 
     doc.setFontSize(8);
-    doc.text("Fecha de versión: 25-11-2025", 200 - 10, 10, { align: "right" });
+    doc.text("Fecha de versión: 25-11-2025", 200 - 10, 10, {
+      align: "right",
+    });
     doc.text("Versión: 01", 200 - 10, 14, { align: "right" });
 
     y = 22;
 
+    // Datos principales
     doc.setFontSize(9);
     doc.text(
       `Referencia contrato: ${formData.referenciaContrato || ""}`,
@@ -363,18 +391,51 @@ export default function HojaInspeccionHidro() {
       y
     );
 
+    // ESTADO DEL EQUIPO: imagen + marcadores + texto
     y += 8;
     doc.setFontSize(9);
     doc.text("Estado del equipo:", 10, y);
     y += 4;
+
+    const equipoImgDataUrl = await loadImageAsDataUrl(EQUIPO_IMG_PATH);
+    const imgX = 10;
+    const imgWidth = 190; // casi todo el ancho
+    const imgHeight = 70; // ajusta si tu imagen es muy alta
+
+    if (equipoImgDataUrl) {
+      // Nueva página si no cabe
+      if (y + imgHeight > 260) {
+        doc.addPage();
+        y = 10;
+      }
+
+      doc.addImage(equipoImgDataUrl, "PNG", imgX, y, imgWidth, imgHeight);
+
+      // Dibujar marcadores en la misma posición relativa
+      estadoEquipoMarks.forEach((m, index) => {
+        const px = imgX + (m.x / 100) * imgWidth;
+        const py = y + (m.y / 100) * imgHeight;
+        doc.setFillColor(255, 0, 0);
+        doc.circle(px, py, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.text(String(index + 1), px, py + 1.5, { align: "center" });
+      });
+
+      doc.setTextColor(0, 0, 0);
+      y += imgHeight + 4;
+    }
+
+    // Texto de estado del equipo
     doc.setFontSize(8);
-    const estadoEquipo = doc.splitTextToSize(
+    const estadoEquipoTexto = doc.splitTextToSize(
       formData.estadoEquipo || "",
       190
     );
-    doc.text(estadoEquipo, 10, y);
-    y += estadoEquipo.length * 4 + 4;
+    doc.text(estadoEquipoTexto, 10, y);
+    y += estadoEquipoTexto.length * 4 + 4;
 
+    // OBSERVACIONES GENERALES
     doc.setFontSize(9);
     doc.text("Observaciones generales:", 10, y);
     y += 4;
@@ -386,6 +447,7 @@ export default function HojaInspeccionHidro() {
     doc.text(obsGenerales, 10, y);
     y += obsGenerales.length * 4 + 6;
 
+    // TABLAS DE ÍTEMS
     secciones.forEach((sec) => {
       if (y > 220) {
         doc.addPage();
@@ -426,6 +488,7 @@ export default function HojaInspeccionHidro() {
       y = doc.lastAutoTable.finalY + 6;
     });
 
+    // NUEVA PÁGINA: descripción del equipo + firmas
     doc.addPage();
     y = 10;
 
@@ -459,6 +522,7 @@ export default function HojaInspeccionHidro() {
     y += 5;
     doc.text(`Kilometraje: ${formData.kilometraje || ""}`, 10, y);
 
+    // Firmas
     y += 10;
     doc.setFontSize(10);
     doc.text("Firmas y responsables", 10, y);
@@ -589,19 +653,56 @@ export default function HojaInspeccionHidro() {
         </div>
       </section>
 
-      {/* ESTADO DEL EQUIPO / OBSERVACIONES GENERALES */}
+      {/* ESTADO DEL EQUIPO (IMAGEN + MARCADORES + TEXTO) */}
       <section className="border rounded-xl p-4 space-y-3">
+        <h2 className="font-semibold text-xs md:text-sm">Estado del equipo</h2>
+        <p className="text-[10px] text-gray-600">
+          Haga clic sobre la imagen para marcar puntos con daños o defectos.
+          Doble clic sobre un número para eliminarlo.
+        </p>
+
+        <div className="w-full flex justify-center">
+          <div
+            className="relative w-full max-w-2xl border rounded-lg overflow-hidden bg-gray-50 cursor-crosshair"
+            onClick={handleEstadoEquipoClick}
+          >
+            <img
+              src={EQUIPO_IMG_PATH}
+              alt="Vistas del equipo"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+
+            {estadoEquipoMarks.map((m, index) => (
+              <button
+                key={m.id}
+                type="button"
+                onDoubleClick={() => handleMarkerDoubleClick(m.id)}
+                className="absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center border border-white shadow"
+                style={{ left: `${m.x}%`, top: `${m.y}%` }}
+                title="Doble clic para eliminar"
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label className="flex flex-col gap-1">
-          <span className="font-semibold">Estado del equipo</span>
+          <span className="font-semibold">Detalle del estado del equipo</span>
           <textarea
             name="estadoEquipo"
             value={formData.estadoEquipo}
             onChange={handleHeaderChange}
             className="border rounded px-2 py-1 min-h-[80px]"
+            placeholder="Describa los daños señalados en la imagen (por ejemplo: Punto 1: abolladura en tanque lado izquierdo)..."
           />
         </label>
+      </section>
+
+      {/* OBSERVACIONES GENERALES */}
+      <section className="border rounded-xl p-4 space-y-3">
         <label className="flex flex-col gap-1">
-          <span className="font-semibold">Observaciones</span>
+          <span className="font-semibold">Observaciones generales</span>
           <textarea
             name="observacionesGenerales"
             value={formData.observacionesGenerales}
@@ -881,7 +982,7 @@ export default function HojaInspeccionHidro() {
           onClick={handleReset}
           className="px-4 py-2 rounded-lg border text-xs md:text-sm"
         >
-          Limpiar ítems
+          Limpiar ítems / marcas
         </button>
         <button
           type="button"
