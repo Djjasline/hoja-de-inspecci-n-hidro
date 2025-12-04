@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Ruta del logo servido desde /public
-const LOGO_PATH = "/astap-logo.jpg";
+const LOGO_PATH = "/logotipo de astap.jpg";
 
 // IMPORTANTE: package.json debe tener:
 // "jspdf": "^2.5.1",
@@ -261,7 +261,6 @@ const secciones = [
 
 export default function HojaInspeccionHidro() {
   const [formData, setFormData] = useState({
-    // encabezado
     referenciaContrato: "",
     descripcion: "",
     codInf: "",
@@ -272,7 +271,6 @@ export default function HojaInspeccionHidro() {
     responsableCliente: "",
     estadoEquipo: "",
     observacionesGenerales: "",
-    // descripción del equipo
     marca: "",
     modelo: "",
     numeroSerie: "",
@@ -282,7 +280,6 @@ export default function HojaInspeccionHidro() {
     anioModelo: "",
     vinChasis: "",
     kilometraje: "",
-    // firmas
     elaboradoNombre: "",
     elaboradoCargo: "",
     elaboradoTelefono: "",
@@ -291,7 +288,6 @@ export default function HojaInspeccionHidro() {
     autorizadoCargo: "",
     autorizadoTelefono: "",
     autorizadoCorreo: "",
-    // ítems SI/NO + observación
     items: {},
   });
 
@@ -348,7 +344,7 @@ export default function HojaInspeccionHidro() {
     // LOGO ASTAP + TÍTULO
     const logoDataUrl = await loadLogoDataUrl();
     if (logoDataUrl) {
-      doc.addImage(logoDataUrl, "JPEG", 10, 8, 25, 10); // ajusta tamaño si hace falta
+      doc.addImage(logoDataUrl, "JPEG", 10, 8, 25, 10);
     }
 
     doc.setFontSize(12);
@@ -418,7 +414,7 @@ export default function HojaInspeccionHidro() {
     doc.text(obsGenerales, 10, y);
     y += obsGenerales.length * 4 + 6;
 
-    // Tablas de secciones con autoTable
+    // Tablas de secciones
     secciones.forEach((sec) => {
       if (y > 220) {
         doc.addPage();
@@ -459,7 +455,7 @@ export default function HojaInspeccionHidro() {
       y = doc.lastAutoTable.finalY + 6;
     });
 
-    // Nueva página para descripción del equipo y firmas
+    // Nueva página: descripción del equipo y firmas
     doc.addPage();
     y = 10;
 
