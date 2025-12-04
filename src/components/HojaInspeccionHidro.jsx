@@ -1,11 +1,61 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import SignatureCanvas from "react-signature-canvas";
 
+// almacenamiento local
+const STORAGE_KEY = "hidro_inspection_reports";
+
+const loadReports = () => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveReports = (reports) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+};
+
 // Rutas de imágenes en /public
 const LOGO_PATH = "/astap-logo.jpg";
 const EQUIPO_IMG_PATH = "/estado-equipo.png";
+
+const initialFormData = {
+  referenciaContrato: "",
+  descripcion: "",
+  codInf: "",
+  fechaInspeccion: "",
+  ubicacion: "",
+  cliente: "",
+  tecnicoAstap: "",
+  responsableCliente: "",
+  estadoEquipo: "",
+  observacionesGenerales: "",
+  marca: "",
+  modelo: "",
+  numeroSerie: "",
+  placa: "",
+  horasModulo: "",
+  horasChasis: "",
+  anioModelo: "",
+  vinChasis: "",
+  kilometraje: "",
+  elaboradoNombre: "",
+  elaboradoCargo: "",
+  elaboradoTelefono: "",
+  elaboradoCorreo: "",
+  autorizadoNombre: "",
+  autorizadoCargo: "",
+  autorizadoTelefono: "",
+  autorizadoCorreo: "",
+  items: {},
+};
 
 const secciones = [
   {
@@ -236,41 +286,40 @@ const secciones = [
 ];
 
 export default function HojaInspeccionHidro() {
-  const [formData, setFormData] = useState({
-    referenciaContrato: "",
-    descripcion: "",
-    codInf: "",
-    fechaInspeccion: "",
-    ubicacion: "",
-    cliente: "",
-    tecnicoAstap: "",
-    responsableCliente: "",
-    estadoEquipo: "",
-    observacionesGenerales: "",
-    marca: "",
-    modelo: "",
-    numeroSerie: "",
-    placa: "",
-    horasModulo: "",
-    horasChasis: "",
-    anioModelo: "",
-    vinChasis: "",
-    kilometraje: "",
-    elaboradoNombre: "",
-    elaboradoCargo: "",
-    elaboradoTelefono: "",
-    elaboradoCorreo: "",
-    autorizadoNombre: "",
-    autorizadoCargo: "",
-    autorizadoTelefono: "",
-    autorizadoCorreo: "",
-    items: {},
-  });
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
+  const [formData, setFormData] = useState(initialFormData);
   const [estadoEquipoMarks, setEstadoEquipoMarks] = useState([]);
 
   const sigAstapRef = useRef(null);
   const sigClienteRef = useRef(null);
+
+  // cargar datos si ya existe la hoja
+  useEffect(() => {
+    if (!id) return;
+    const reports = loadReports();
+    const existing = reports.find((r) => r.id === id);
+    if (existing?.data) {
+      setFormData({
+        ...initialFormData,
+        ...(existing.data.formData || {}),
+      });
+      setEstadoEquipoMarks(existing.data.estadoEquipoMarks || []);
+    }
+  }, [id]);
+
+  // si viene ?pdf=1 desde la lista, generar PDF automáticamente
+  useEffect(() => {
+    const autoPdf = searchParams.get("pdf");
+    if (autoPdf === "1") {
+      const timer = setTimeout(() => {
+        handleGeneratePDF();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleHeaderChange = (e) => {
     const { name, value } = e.target;
@@ -292,17 +341,41 @@ export default function HojaInspeccionHidro() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Datos de inspección:", {
-      ...formData,
-      estadoEquipoMarks,
-    });
+
+    if (!id) {
+      console.warn("No hay id de hoja en la URL; no se puede guardar.");
+      return;
+    }
+
+    const reports = loadReports();
+    const index = reports.findIndex((r) => r.id === id);
+
+    const resumen = {
+      id,
+      fecha: formData.fechaInspeccion || null,
+      cliente: formData.cliente || "",
+      codigoInterno: formData.codInf || "",
+      estado: "Borrador",
+      data: {
+        formData,
+        estadoEquipoMarks,
+      },
+    };
+
+    let next;
+    if (index >= 0) {
+      next = [...reports];
+      next[index] = { ...reports[index], ...resumen };
+    } else {
+      next = [...reports, resumen];
+    }
+
+    saveReports(next);
+    alert("Hoja guardada como borrador.");
   };
 
   const handleReset = () => {
-    setFormData((prev) => ({
-      ...prev,
-      items: {},
-    }));
+    setFormData(initialFormData);
     setEstadoEquipoMarks([]);
     if (sigAstapRef.current) sigAstapRef.current.clear();
     if (sigClienteRef.current) sigClienteRef.current.clear();
@@ -319,8 +392,8 @@ export default function HojaInspeccionHidro() {
     ]);
   };
 
-  const handleMarkerDoubleClick = (id) => {
-    setEstadoEquipoMarks((prev) => prev.filter((m) => m.id !== id));
+  const handleMarkerDoubleClick = (idMark) => {
+    setEstadoEquipoMarks((prev) => prev.filter((m) => m.id !== idMark));
   };
 
   const loadImageAsDataUrl = async (path) => {
@@ -1071,10 +1144,17 @@ export default function HojaInspeccionHidro() {
       <div className="flex flex-wrap justify-end gap-3 pt-2">
         <button
           type="button"
+          onClick={() => navigate("/")}
+          className="px-4 py-2 rounded-lg border text-xs md:text-sm"
+        >
+          Volver
+        </button>
+        <button
+          type="button"
           onClick={handleReset}
           className="px-4 py-2 rounded-lg border text-xs md:text-sm"
         >
-          Limpiar ítems / marcas / firmas
+          Limpiar artículos / marcas / firmas
         </button>
         <button
           type="button"
